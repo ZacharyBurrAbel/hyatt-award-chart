@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hyatt Award Chart — Old vs New Pricing | Monkey Miles</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #2E2E2E;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 860px;
+    }
+
+    .header {
+      margin-bottom: 1.5rem;
+    }
+
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .header .accent {
+      color: #F5C518;
+    }
+
+    #mm-wrap {
+      background: #3A3A3A;
+      border-radius: 12px;
+      padding: 1.5rem;
+      color: #fff;
+    }
+
+    /* Tabs */
+    .tabs-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .tabs-label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    #mm-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    #mm-tabs button {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 4px;
+      border: 1.5px solid rgba(255,255,255,0.4);
+      background: transparent;
+      color: #fff;
+      transition: all .15s;
+      font-family: inherit;
+    }
+
+    #mm-tabs button.active {
+      background: #F5C518;
+      color: #1A1A1A;
+      border-color: #F5C518;
+    }
+
+    #mm-tabs button:not(.active):hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .legend-swatch {
+      display: inline-block;
+      width: 30px;
+      height: 9px;
+      border-radius: 3px;
+    }
+
+    .legend-tick {
+      display: inline-block;
+      width: 3px;
+      height: 14px;
+      border-radius: 1px;
+      background: #F5C518;
+    }
+
+    /* Chart rows */
+    .mm-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      border: 1.5px solid transparent;
+      transition: background .1s;
+    }
+
+    .mm-row:hover { background: rgba(255,255,255,0.07); }
+    .mm-row.selected { background: rgba(255,255,255,0.12); border-color: #F5C518; }
+
+    .mm-label {
+      width: 52px;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border-radius: 4px;
+      padding: 3px 6px;
+      text-align: center;
+    }
+
+    .mm-row.selected .mm-label {
+      background: #F5C518;
+      color: #1A1A1A;
+    }
+
+    .mm-bar-bg {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .mm-track {
+      position: relative;
+      height: 11px;
+      width: 100%;
+    }
+
+    .mm-scale {
+      position: relative;
+      height: 14px;
+      width: 100%;
+    }
+
+    .mm-scale span {
+      position: absolute;
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      transform: translateX(-50%);
+    }
+
+    /* Detail cards */
+    #mm-detail { margin-top: 16px; }
+
+    .detail-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .detail-heading .bar {
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      background: #F5C518;
+      border-radius: 2px;
+    }
+
+    .detail-heading span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .mm-card {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      padding: 10px 13px;
+    }
+
+    .mm-card .card-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 3px;
+    }
+
+    .mm-card .card-val {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .mm-card .card-diff {
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      margin-top: 14px;
+      margin-bottom: 24px;
+    }
+
+    /* Divider */
+    .divider {
+      border-top: 1px solid rgba(255,255,255,0.2);
+      padding-top: 20px;
+      margin-top: 4px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .section-heading .bar {
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      background: #F5C518;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .section-heading span {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Reference table */
+    .table-scroll { overflow-x: auto; }
+
+    #ref-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    #ref-table th {
+      padding: 7px 10px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      white-space: nowrap;
+    }
+
+    #ref-table th.th-cat {
+      text-align: left;
+      color: #F5C518;
+    }
+
+    #ref-table td {
+      padding: 6px 10px;
+      text-align: center;
+      border-bottom: 0.5px solid rgba(255,255,255,0.08);
+      font-size: 12px;
+      color: rgba(255,255,255,0.85);
+    }
+
+    #ref-table tr:last-child td { border-bottom: none; }
+    #ref-table tr:nth-child(even) td { background: rgba(255,255,255,0.04); }
+
+    .td-cat {
+      display: inline-block;
+      text-align: left;
+      font-weight: 700;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+
+    .col-lowest { color: #5DD68A !important; font-weight: 600; }
+    .col-top    { color: #FF6B6B !important; font-weight: 600; }
+
+    .footer {
+      margin-top: 1.25rem;
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      text-align: center;
+    }
+
+    .footer a {
+      color: #F5C518;
+      text-decoration: none;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 1rem 0.5rem; }
+      #mm-wrap { padding: 1rem; }
+      .header h1 { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>Hyatt Award Chart <span class="accent">Old vs New</span></h1>
+    <p>New 5-tier pricing effective May 20, 2026 &mdash; via <a href="https://monkeymiles.com" style="color:#F5C518;text-decoration:none;">Monkey Miles</a></p>
+  </div>
+
+  <div id="mm-wrap">
+
+    <div class="tabs-row">
+      <span class="tabs-label">Room type:</span>
+      <div id="mm-tabs"></div>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item">
+        <span class="legend-swatch" style="background:rgba(255,255,255,0.35);"></span>
+        Current (off-peak → peak)
+      </span>
+      <span class="legend-item">
+        <span class="legend-swatch" style="background:#C8102E;"></span>
+        New range (lowest → top)
+      </span>
+      <span class="legend-item">
+        <span class="legend-tick"></span>
+        Current standard
+      </span>
+    </div>
+
+    <div id="mm-chart"></div>
+    <div id="mm-detail"></div>
+    <p class="hint">Click a row to see exact point values.</p>
+
+    <div class="divider">
+      <div class="section-heading">
+        <span class="bar"></span>
+        <span>New award chart reference &mdash; points per night (effective May 20, 2026)</span>
+      </div>
+      <div class="table-scroll">
+        <table id="ref-table">
+          <thead>
+            <tr>
+              <th class="th-cat">Category</th>
+              <th style="color:#5DD68A;">Lowest</th>
+              <th>Low</th>
+              <th>Moderate</th>
+              <th>Upper</th>
+              <th style="color:#FF6B6B;">Top</th>
+            </tr>
+          </thead>
+          <tbody id="ref-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer">Data sourced from <a href="https://world.hyatt.com/content/gp/en/rewards/award-chart-updates.html" target="_blank">World of Hyatt</a> &bull; Built for <a href="https://monkeymiles.com" target="_blank">Monkey Miles</a></p>
+
+</div>
+
+<script>
+  const newChart = [
+    [1,  3000,  4500,  6000,  7500,  9000],
+    [2,  6000,  7500, 10000, 12000, 15000],
+    [3,  8000, 12000, 15000, 17500, 20000],
+    [4, 12000, 15000, 20000, 22500, 25000],
+    [5, 15000, 20000, 25000, 30000, 35000],
+    [6, 20000, 25000, 30000, 35000, 40000],
+    [7, 25000, 30000, 35000, 45000, 55000],
+    [8, 35000, 45000, 55000, 65000, 75000],
+  ];
+
+  const data = {
+    'Standard room': {
+      curOff:[3500,8000,12000,15000,20000,25000,30000,40000],
+      curStd:[5000,10000,15000,20000,25000,30000,35000,45000],
+      curPk: [5500,12000,17000,25000,30000,35000,40000,45000],
+      newLo: [3000,6000,8000,12000,15000,20000,25000,35000],
+      newHi: [9000,15000,20000,25000,35000,40000,55000,75000],
+    },
+    'Club room': {
+      curOff:[6000,11000,15500,18500,23500,28500,33500,44000],
+      curStd:[7500,13500,18500,23500,28500,33500,38500,49000],
+      curPk: [9000,15500,20500,28500,33500,38500,43500,49000],
+      newLo: [5000,9000,11500,15500,18500,23500,28500,38500],
+      newHi: [12500,18500,23500,29000,38500,44000,59000,80000],
+    },
+    'Premium room': {
+      curOff:[4500,9500,13500,17500,22500,27500,32500,42000],
+      curStd:[6000,12000,17000,22000,27000,32000,37000,46000],
+      curPk: [7000,14000,19000,27000,32000,37000,42000,47000],
+      newLo: [4000,7500,10000,14000,17000,22000,27000,37000],
+      newHi: [10500,17000,22000,27500,37000,42000,57000,77500],
+    },
+    'Junior suite': {
+      curOff:[7000,13000,17500,22500,27500,33000,38000,47000],
+      curStd:[9000,15500,20500,26000,31500,37000,42000,52000],
+      curPk: [11000,18000,23000,31000,36500,42000,47000,53000],
+      newLo: [6500,11000,14000,18000,21500,27000,31500,42000],
+      newHi: [14500,21000,26500,32000,42000,47500,62000,83500],
+    },
+    'Suite': {
+      curOff:[10000,15500,20000,27000,32000,37500,43000,54000],
+      curStd:[12500,18500,24000,32000,37500,43000,49000,58000],
+      curPk: [15000,22000,28000,37000,43000,49000,55000,62000],
+      newLo: [9000,14000,18000,22000,26000,32000,37000,48000],
+      newHi: [18500,26000,32000,38000,48000,55000,70000,92000],
+    },
+    'Points + Cash': {
+      curOff:[1750,4000,6000,7500,10000,12500,15000,20000],
+      curStd:[2500,5000,7500,10000,12500,15000,17500,22500],
+      curPk: [2750,6000,8500,12500,15000,17500,20000,22500],
+      newLo: [1500,3000,4000,6000,7500,10000,12500,17500],
+      newHi: [4500,7500,10000,12500,17500,20000,27500,37500],
+    },
+  };
+
+  const keys = Object.keys(data);
+  let active = keys[0];
+  let selectedRow = null;
+
+  function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'k' : String(n); }
+  function fmtFull(n) { return n.toLocaleString() + ' pts'; }
+
+  function buildRefTable() {
+    const tbody = document.getElementById('ref-body');
+    newChart.forEach(([cat, lo, low, mod, up, top]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="td-cat">Cat ${cat}</span></td>
+        <td class="col-lowest">${lo.toLocaleString()}</td>
+        <td>${low.toLocaleString()}</td>
+        <td>${mod.toLocaleString()}</td>
+        <td>${up.toLocaleString()}</td>
+        <td class="col-top">${top.toLocaleString()}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function buildTabs() {
+    const el = document.getElementById('mm-tabs');
+    keys.forEach(k => {
+      const b = document.createElement('button');
+      b.textContent = k;
+      b.dataset.k = k;
+      b.onclick = () => { active = k; selectedRow = null; render(); };
+      el.appendChild(b);
+    });
+  }
+
+  function styleTab() {
+    document.querySelectorAll('#mm-tabs button').forEach(b => {
+      b.className = b.dataset.k === active ? 'active' : '';
+    });
+  }
+
+  function render() {
+    styleTab();
+    const d = data[active];
+    const maxVal = Math.max(...d.newHi) * 1.05;
+    const catLabels = ['Cat 1','Cat 2','Cat 3','Cat 4','Cat 5','Cat 6','Cat 7','Cat 8'];
+    const tickPts = [0, 0.25, 0.5, 0.75, 1];
+
+    let html = '';
+    for (let i = 0; i < 8; i++) {
+      const pct = v => Math.min(100, (v / maxVal) * 100);
+      const cL = pct(d.curOff[i]), cR = pct(d.curPk[i]);
+      const nL = pct(d.newLo[i]), nR = pct(d.newHi[i]);
+      const stdX = pct(d.curStd[i]);
+      const sel = selectedRow === i;
+
+      html += `<div class="mm-row${sel ? ' selected' : ''}" data-row="${i}">`;
+      html += `<div class="mm-label">${catLabels[i]}</div>`;
+      html += `<div class="mm-bar-bg">`;
+      html += `<div class="mm-track">
+        <div style="position:absolute;left:${cL}%;width:${cR - cL}%;height:100%;background:rgba(255,255,255,0.35);border-radius:3px;"></div>
+        <div style="position:absolute;left:${stdX}%;transform:translateX(-50%);width:3px;height:15px;top:-2px;background:#F5C518;border-radius:1px;"></div>
+      </div>`;
+      html += `<div class="mm-track">
+        <div style="position:absolute;left:${nL}%;width:${nR - nL}%;height:100%;background:#C8102E;border-radius:3px;"></div>
+      </div>`;
+      html += `<div class="mm-scale">`;
+      tickPts.forEach(t => {
+        html += `<span style="left:${t * 100}%;">${fmt(Math.round(maxVal * t))}</span>`;
+      });
+      html += `</div></div></div>`;
+    }
+
+    document.getElementById('mm-chart').innerHTML = html;
+
+    document.querySelectorAll('.mm-row').forEach(el => {
+      el.addEventListener('click', () => {
+        selectedRow = selectedRow === +el.dataset.row ? null : +el.dataset.row;
+        render();
+      });
+    });
+
+    renderDetail(d);
+  }
+
+  function renderDetail(d) {
+    const el = document.getElementById('mm-detail');
+    if (selectedRow === null) {
+      el.innerHTML = '';
+      return;
+    }
+    const i = selectedRow;
+    const cats = ['Cat 1','Cat 2','Cat 3','Cat 4','Cat 5','Cat 6','Cat 7','Cat 8'];
+    const std = d.curStd[i];
+    const dL = d.newLo[i] - std, dH = d.newHi[i] - std;
+    const pL = Math.round(dL / std * 100), pH = Math.round(dH / std * 100);
+
+    const card = (label, val, valColor, diff, diffColor) => `
+      <div class="mm-card">
+        <div class="card-label">${label}</div>
+        <div class="card-val" style="color:${valColor};">${fmtFull(val)}</div>
+        ${diff !== null ? `<div class="card-diff" style="color:${diffColor};">${diff}</div>` : ''}
+      </div>`;
+
+    el.innerHTML = `
+      <div class="detail-heading">
+        <span class="bar"></span>
+        <span>${cats[i]} &mdash; ${active}</span>
+      </div>
+      <div class="detail-grid">
+        ${card('Current off-peak', d.curOff[i], 'rgba(255,255,255,0.7)', null, null)}
+        ${card('Current standard', d.curStd[i], '#fff', null, null)}
+        ${card('Current peak', d.curPk[i], 'rgba(255,255,255,0.7)', null, null)}
+        ${card('New lowest', d.newLo[i], '#5DD68A', `${dL > 0 ? '+' : ''}${dL.toLocaleString()} vs std (${pL > 0 ? '+' : ''}${pL}%)`, dL > 0 ? '#FF6B6B' : '#5DD68A')}
+        ${card('New top', d.newHi[i], '#FF6B6B', `${dH > 0 ? '+' : ''}${dH.toLocaleString()} vs std (${pH > 0 ? '+' : ''}${pH}%)`, dH > 0 ? '#FF6B6B' : '#5DD68A')}
+      </div>`;
+  }
+
+  buildTabs();
+  render();
+  buildRefTable();
+</script>
+
+</body>
+</html>
